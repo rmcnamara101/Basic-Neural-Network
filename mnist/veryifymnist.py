@@ -1,6 +1,6 @@
 import random
 import matplotlib.pyplot as plt
-from loadmnist import MnistDataloader
+from mnist.loadmnist import MnistDataloader
 from os.path import join
 
 # Helper function to show a list of images with their related titles

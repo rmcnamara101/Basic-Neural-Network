@@ -1,7 +1,7 @@
 import numpy as np
 from Trainers import GradientDescentTrainer
 from NeuralNet import NeuralNetwork
-from loadmnist import MnistDataloader
+from mnist.loadmnist import MnistDataloader
 from os.path import join
 
 # Paths to the MNIST dataset files
@@ -17,9 +17,10 @@ mnist_dataloader = MnistDataloader(training_images_filepath, training_labels_fil
 (x_train, y_train), (x_test, y_test) = mnist_dataloader.load_data()
 print("Dataset loaded successfully!")
 
+
 # Normalize input data
-x_train = x_train / 255.0
-x_test = x_test / 255.0
+x_train = np.array(x_train) / 255.0
+x_test = np.array(x_test) / 255.0
 
 # Reshape the training data to match the network input
 x_train = [x.reshape(-1, 1) for x in x_train]
@@ -43,6 +44,13 @@ learning_rate = 0.01
 print("Starting training...")
 loss_history = trainer.train(network, x_train, y_train, epochs, learning_rate)
 print("Training completed!")
+
+# Save the model weights and biases in NPZ format
+def save_model_npz(network, filename):
+    np.savez(filename, *network.weights, *network.biases)
+    print(f"Model saved to {filename}.npz")
+
+save_model_npz(network, "models/mnist_model")
 
 # Evaluate the network
 correct = 0

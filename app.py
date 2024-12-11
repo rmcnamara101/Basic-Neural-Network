@@ -1,13 +1,13 @@
 import streamlit as st
 import matplotlib.pyplot as plt
 import numpy as np
-from typing import List, Optional
-import time
+from typing import List
+from sklearn.metrics import confusion_matrix, accuracy_score
+import seaborn as sns
 
 class NeuralNetworkVisualizer:
     """
-    Enhanced Visualization Tool for inspecting the performance and parameters of a neural network.
-    Includes interactive UI elements and a demonstration of training on synthetic data.
+    Visualization Tool for inspecting the performance and parameters of a neural network.
     """
 
     @staticmethod
@@ -15,17 +15,15 @@ class NeuralNetworkVisualizer:
         """
         Plot the training loss over epochs.
         """
-        st.markdown("### Training Loss Over Epochs")
-        st.markdown("This chart shows how the training loss changes over time.")
-        fig, ax = plt.subplots(figsize=(10,6))
-        ax.plot(loss_history, label="Training Loss", color="lime")
-        ax.set_facecolor("#2d2d2d")
-        ax.set_title("Training Loss Over Epochs", color="lime")
-        ax.set_xlabel("Epoch", color="lime")
-        ax.set_ylabel("Loss", color="lime")
-        ax.tick_params(colors="lime")
+        st.subheader("Training Loss Over Epochs")
+        st.write("This chart shows how the training loss changes over time.")
+        fig, ax = plt.subplots()
+        ax.plot(loss_history, label="Training Loss", color="blue")
+        ax.set_title("Training Loss Over Epochs", fontsize=14)
+        ax.set_xlabel("Epoch")
+        ax.set_ylabel("Loss")
         ax.legend()
-        ax.grid(True, color="gray")
+        ax.grid(True)
         st.pyplot(fig)
 
     @staticmethod
@@ -33,17 +31,12 @@ class NeuralNetworkVisualizer:
         """
         Visualize weight matrices as heatmaps.
         """
-        st.markdown("### Weight Matrices")
-        st.markdown("Below are the weight matrices of your network.")
+        st.subheader("Weight Matrices")
+        st.write("Below are the weight matrices of your network.")
         for i, weight_matrix in enumerate(weights):
-            fig, ax = plt.subplots(figsize=(8,6))
-            cax = ax.imshow(weight_matrix, cmap="viridis", aspect="auto")
-            ax.set_facecolor("#2d2d2d")
-            fig.colorbar(cax, ax=ax)
-            ax.set_title(f"Weight Matrix for Layer {i + 1}", color="lime")
-            ax.set_xlabel("Input Neurons", color="lime")
-            ax.set_ylabel("Output Neurons", color="lime")
-            ax.tick_params(colors="lime")
+            fig, ax = plt.subplots()
+            sns.heatmap(weight_matrix, cmap="coolwarm", cbar=True, ax=ax)
+            ax.set_title(f"Weight Matrix for Layer {i + 1}")
             st.pyplot(fig)
 
     @staticmethod
@@ -51,44 +44,62 @@ class NeuralNetworkVisualizer:
         """
         Compare predictions with ground truth for a single sample.
         """
-        fig, ax = plt.subplots(figsize=(10,6))
-        ax.plot(predictions[sample_index], label="Prediction", marker="o", color="lime")
-        ax.plot(targets[sample_index], label="Target", marker="x", color="cyan")
-        ax.set_facecolor("#2d2d2d")
-        ax.set_title(f"Sample {sample_index + 1} - Prediction vs Target", color="lime")
-        ax.set_xlabel("Output Neuron Index", color="lime")
-        ax.set_ylabel("Value", color="lime")
-        ax.tick_params(colors="lime")
+        fig, ax = plt.subplots()
+        ax.plot(predictions[sample_index], label="Prediction", marker="o", color="blue")
+        ax.plot(targets[sample_index], label="Target", marker="x", color="orange")
+        ax.set_title(f"Sample {sample_index + 1} - Prediction vs Target")
+        ax.set_xlabel("Output Neuron Index")
+        ax.set_ylabel("Value")
         ax.legend()
-        ax.grid(True, color="gray")
+        ax.grid(True)
+        st.pyplot(fig)
+
+    @staticmethod
+    def visualize_weight_distributions(weights: List[np.ndarray]) -> None:
+        """
+        Visualize the distribution of weights for each layer.
+        """
+        st.subheader("Weight Distributions")
+        st.write("This view shows histograms of the weight values for each layer.")
+
+        for i, weight_matrix in enumerate(weights):
+            fig, ax = plt.subplots()
+            ax.hist(weight_matrix.flatten(), bins=30, color="blue", edgecolor="black")
+            ax.set_title(f"Weight Distribution for Layer {i + 1}")
+            ax.set_xlabel("Weight Value")
+            ax.set_ylabel("Frequency")
+            st.pyplot(fig)
+
+    @staticmethod
+    def visualize_confusion_matrix(predictions: np.ndarray, targets: np.ndarray) -> None:
+        """
+        Visualize the confusion matrix for classification tasks.
+        """
+        cm = confusion_matrix(targets, predictions)
+        fig, ax = plt.subplots()
+        sns.heatmap(cm, annot=True, fmt='d', cmap='coolwarm', ax=ax, cbar=False)
+        ax.set_title("Confusion Matrix")
+        ax.set_xlabel("Predicted")
+        ax.set_ylabel("True")
         st.pyplot(fig)
 
     @staticmethod
     def run_training_demo():
         """
-        Demonstrate a simple training process on synthetic data and visualize the loss over epochs.
+        Demonstrate a simple training process on synthetic data.
         """
-        st.markdown("### Training Demonstration")
-        st.markdown("""
-        This section simulates training on a synthetic dataset to show how loss decreases over epochs.
-        Adjust the number of epochs and learn rate to see how the training behaves.
-        """)
+        st.subheader("Training Demonstration")
+        st.write("Simulate training on synthetic data to observe loss reduction over epochs.")
 
-        epochs = st.slider("Number of Training Epochs", min_value=10, max_value=200, value=50, step=10)
-        learn_rate = st.slider("Learning Rate", min_value=0.001, max_value=0.1, value=0.01, step=0.001)
+        epochs = st.slider("Number of Training Epochs", 10, 200, 50, 10)
+        learn_rate = st.slider("Learning Rate", 0.001, 0.1, 0.01, 0.001)
         run_training = st.button("Run Training")
 
         if run_training:
-            # Synthetic data: y = 2x + 1 with some noise
             x = np.linspace(-1, 1, 100)
             y = 2 * x + 1 + np.random.randn(*x.shape) * 0.2
-
-            # Simple linear model: y_pred = w*x + b
-            w = np.random.randn()
-            b = np.random.randn()
-
+            w, b = np.random.randn(), np.random.randn()
             loss_history = []
-            training_progress = st.empty()  # For live updates
             chart_placeholder = st.empty()
 
             for epoch in range(epochs):
@@ -97,97 +108,77 @@ class NeuralNetworkVisualizer:
                 loss = np.mean(error**2)
                 loss_history.append(loss)
 
-                # Gradient descent
-                w_grad = 2 * np.mean(error * x)
-                b_grad = 2 * np.mean(error)
-                w -= learn_rate * w_grad
-                b -= learn_rate * b_grad
+                w -= learn_rate * 2 * np.mean(error * x)
+                b -= learn_rate * 2 * np.mean(error)
 
-                # Update progress and chart
-                training_progress.text(f"Epoch {epoch+1}/{epochs}, Loss: {loss:.4f}")
                 fig, ax = plt.subplots()
-                ax.plot(loss_history, label="Loss", color="lime")
-                ax.set_facecolor("#2d2d2d")
-                ax.set_title("Training Loss Over Epochs", color="lime")
-                ax.set_xlabel("Epoch", color="lime")
-                ax.set_ylabel("Loss", color="lime")
-                ax.tick_params(colors="lime")
+                ax.plot(loss_history, label="Loss", color="blue")
+                ax.set_title("Training Loss Over Epochs")
+                ax.set_xlabel("Epoch")
+                ax.set_ylabel("Loss")
                 ax.legend()
-                ax.grid(True, color="gray")
+                ax.grid(True)
                 chart_placeholder.pyplot(fig)
-                time.sleep(0.1)
 
             st.success("Training completed!")
-            st.markdown(f"**Final Loss:** {loss_history[-1]:.4f}")
-            st.markdown(f"**Learned Parameters:** w = {w:.4f}, b = {b:.4f}")
+            st.write(f"**Final Loss:** {loss_history[-1]:.4f}")
+            st.write(f"**Learned Parameters:** w = {w:.4f}, b = {b:.4f}")
 
     @staticmethod
     def build_ui():
         """
-        Build an interactive UI using Streamlit for visualizing training, weights, predictions, and a demo.
+        Build an interactive UI using Streamlit.
         """
-        st.set_page_config(layout="wide")
-        st.markdown("<style>.css-18e3th9 {background-color: #1e1e1e;} .css-1d391kg {color: lime;}</style>", unsafe_allow_html=True)
-        st.title("Neural Network Visualization Tool", anchor=None)
+        st.set_page_config(layout="wide", page_title="Neural Network Visualization Tool")
+        st.title("Neural Network Visualization Tool")
 
-        # Sidebar for navigation
         st.sidebar.title("Navigation")
-        view = st.sidebar.radio("Select View", ["Introduction", "View Loss", "View Weights", "View Predictions", "Training Demonstration"])
 
-        # Introduction
-        if view == "Introduction":
-            st.markdown("""
-            ## Welcome to the Neural Network Visualization Tool
+        views = {
+            "Introduction": "Introduction",
+            "View Loss": "View Loss",
+            "View Weights": "View Weights",
+            "View Weight Distributions": "View Weight Distributions",
+            "View Predictions": "View Predictions",
+            "Training Demonstration": "Training Demonstration"
+        }
 
-            Use the sidebar to navigate between different views:
-            - **View Loss:** Upload a loss history CSV to visualize how loss changes over epochs.
-            - **View Weights:** Upload a weights NPZ file to view your network's weight matrices.
-            - **View Predictions:** Upload predictions and target CSV files to compare the network outputs.
-            - **Training Demonstration:** Run a simulated training session on synthetic data.
+        selected_view = ""
+        for view_name, view_label in views.items():
+            if st.sidebar.button(view_label):
+                selected_view = view_name
+
+        if selected_view == "Introduction":
+            st.write("""
+            ## Welcome
+            Use the sidebar to navigate through different visualizations and tools.
             """)
-
-        # View Loss
-        elif view == "View Loss":
-            st.markdown("## Loss Visualization")
+        elif selected_view == "View Loss":
             loss_uploaded = st.file_uploader("Upload Loss History (CSV Format)", type="csv")
             if loss_uploaded:
                 loss_history = np.loadtxt(loss_uploaded, delimiter=',')
                 NeuralNetworkVisualizer.plot_loss(loss_history)
-        
-        # View Weights
-        elif view == "View Weights":
-            st.markdown("## Weight Visualization")
+        elif selected_view == "View Weights":
             weights_uploaded = st.file_uploader("Upload Weights (NPZ Format)", type="npz")
             if weights_uploaded:
                 data = np.load(weights_uploaded)
                 weights = [data[key] for key in sorted(data.keys())]
                 NeuralNetworkVisualizer.visualize_weights(weights)
-
-        # View Predictions
-        elif view == "View Predictions":
-            st.markdown("## Predictions vs Targets")
+        elif selected_view == "View Weight Distributions":
+            weights_uploaded = st.file_uploader("Upload Weights (NPZ Format)", type="npz")
+            if weights_uploaded:
+                data = np.load(weights_uploaded)
+                weights = [data[key] for key in sorted(data.keys())]
+                NeuralNetworkVisualizer.visualize_weight_distributions(weights)
+        elif selected_view == "View Predictions":
             predictions_uploaded = st.file_uploader("Upload Predictions (CSV Format)", type="csv")
             targets_uploaded = st.file_uploader("Upload Targets (CSV Format)", type="csv")
             if predictions_uploaded and targets_uploaded:
                 predictions = np.loadtxt(predictions_uploaded, delimiter=',')
                 targets = np.loadtxt(targets_uploaded, delimiter=',')
-                
-                # Check shape and reshape if needed
-                # Assuming predictions and targets are arrays of shape (samples, outputs)
-                if predictions.ndim == 1:
-                    predictions = predictions.reshape((1, -1))
-                if targets.ndim == 1:
-                    targets = targets.reshape((1, -1))
-
-                predictions_list = [predictions[i].reshape(-1, 1) for i in range(predictions.shape[0])]
-                targets_list = [targets[i].reshape(-1, 1) for i in range(targets.shape[0])]
-
-                num_samples = len(predictions_list)
-                sample_index = st.slider("Select Sample Index", min_value=0, max_value=num_samples-1, value=0)
-                NeuralNetworkVisualizer.visualize_predictions(predictions_list, targets_list, sample_index)
-
-        # Training Demonstration
-        elif view == "Training Demonstration":
+                sample_index = st.slider("Select Sample Index", 0, len(predictions) - 1, 0)
+                NeuralNetworkVisualizer.visualize_predictions([predictions], [targets], sample_index)
+        elif selected_view == "Training Demonstration":
             NeuralNetworkVisualizer.run_training_demo()
 
 if __name__ == "__main__":
