@@ -59,7 +59,7 @@ def main():
     network = NeuralNetwork((input_size, hidden_layer_size, output_size))
 
     # Load the trained model
-    model_filename = "mnist_model.npz"
+    model_filename = "models/mnist_model.npz"
     load_model_npz(model_filename, network)
 
     # Load a sample image for testing
